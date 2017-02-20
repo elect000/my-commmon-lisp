@@ -213,3 +213,41 @@
       ((eq *fruit* 'orange) 
        'its-an-orange))
 
+;; symbol
+(eq 'apple 'apple) ;; -> T
+
+;; others
+(equal (list 1 2 3) (list 1 2 3)) ;; -> T
+
+(equal '(1 2 3) (cons 1 (cons 2 (cons 3 ()))))
+
+(equal 5 5 )
+
+(equal 2.5 2.5)
+
+(equal "foo" "foo")
+
+(equal #\a #\a)
+
+;; symbol and charactor and number
+(eql 'foo 'foo)
+
+(eql #\a #\a)
+
+(eql 3.4 3.4)
+
+;; big and small charactor or number 
+(equalp "Bob Smith" "bob smith") ;; -> T
+
+(equalp 0 0.0) ;; -> T
+
+;; number
+(= 9 9)
+
+;; string
+(string-equal "John" "john")
+
+;; charactor
+(char-equal #\a #\a) 
+
+
