@@ -63,7 +63,7 @@
 	     (eq (cadr (assoc obj obj-locs)) loc))) ;; does the loc have anything? 
     (remove-if-not #'at-loc-p objs)))  		    ;; the something in the list
 
-(object-at 'living-room *objects* *object-locations*) ;; (whikey bucket)
+(objects-at 'living-room *objects* *object-locations*) ;; (whikey bucket)
 
 (defun describe-objects (loc objs obj-locs) 
   (labels ((describe-obj (obj)
@@ -104,7 +104,8 @@
 ;;!!!
 (objects-at *location* *objects* *object-locations*) ;; (whiskey bucket)
 
-(pickup *location* *objects* *object-locations*) ;; (you are now carrying the bucket)
+(defparameter *object* 'bucket)
+(pickup *object*) ;; (you are now carrying the bucket)
 
 (objects-at *location* *objects* *object-locations*) ;; (whiskey) 
 ;;!look "(eq (cadr (assoc obj obj-locs)) loc))"
