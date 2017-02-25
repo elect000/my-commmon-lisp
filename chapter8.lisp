@@ -185,12 +185,13 @@
 ;; cdr * -> (node3 cops)
 ;; -> sirens!
 
-(defun new-game ()
-  (setf *congestion-city-edges* (make-city-edges))
-  (setf *congestion-city-nodes* (make-city-nodes *congestion-city-edges*))
-  (setf	*player-pos* (find-empty-node))
-  (setf *visited-nodes* (list *player-pos*))
-  (draw-city))
+;; !!! redefined !!!
+;;(defun new-game ()
+;;  (setf *congestion-city-edges* (make-city-edges))
+;;  (setf *congestion-city-nodes* (make-city-nodes *congestion-city-edges*))
+;;  (setf	*player-pos* (find-empty-node))
+;;  (setf *visited-nodes* (list *player-pos*))
+;;  (draw-city))
 
 ;; *congestion-city-edges* -> ex. ((1 (2 cops)) (2 (3) (4)) ...)
 ;; *congestion-city-nodes* -> ex. ((1 Blood!) (2 Blood sirens!) (3) ...)
@@ -203,3 +204,106 @@
 
 (defun draw-city ()
   (ugraph->png "city.dot" *congestion-city-nodes* *congestion-city-edges*))
+
+(defun known-city-nodes ()
+  (mapcar (lambda (node)
+	    (if (member node *visited-nodes*) ;; ex. (member 4 '(2 3 5... ))
+		(let ((n (assoc node *congestion-city-nodes*)))
+		  (if (eql node *player-pos*) 
+		      (append n '(*))
+		      n)) ;; add nothing
+		(list node '?))) ;; ex. (4 ?)
+	  (remove-duplicates ;; remove same value in "a" list using eql  ex.(2 3 4... 5...)
+	   (append *visited-nodes*		      ;; *visited-nodes* ex.(2 3 5... 2 3 4....)
+		   (mapcan (lambda (node)	      ;; add next node / ! #'within-one !
+			     (mapcar #'car            ;; (2)
+				     (cdr (assoc node ;; node=1 : (1 (2 cops) ...) 
+						 *congestion-city-edges*))))
+			   *visited-nodes*)))))
+
+;; (mapcan (lambda (x) (list x)) '(1 2 3 4 5)) -> (1 2 3 4 5)
+;; (mapcar (lambda (x) (list x)) '(1 2 3 4 5)) -> ((1) (2) (3) (4) (5))
+
+(defun known-city-edges ()
+  (mapcar (lambda (node)
+	    (cons node (mapcar (lambda (x)
+			       (if (member (car x) *visited-nodes*)
+				   x
+				   (list (car x)))) ;; remove the keyword: cops / ex.(2 cops) -> (2)
+			       (cdr (assoc node *congestion-city-edges*))))) ;; ex. ((2 cops) ...)
+	  *visited-nodes*)) ;; ex. (1 2 3 4 5 ...)
+
+(defun ingredients (order)
+  (mapcan (lambda (burger)
+	    (case burger
+	      (single (list 'patty))
+	      (double (list 'patty 'patty))
+	      (double-cheese (list 'patty 'patty 'cheese))
+	      ))
+	  order))
+
+;; tips ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; mapcan want to get list                   ;;;;
+;;   and return integrate list               ;;;;
+;; ex. (ingredients '(single double-cheese)) ;;;;
+;; -> ((patty) (patty patty cheese)) ,mapcar ;;;;
+;; -> (patty patty patty cheese)     ,mapcan ;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun draw-known-city ()
+  (ugraph->png "known-city.dot" (known-city-nodes) (known-city-edges)))
+
+(defun new-game ()
+  (setf *congestion-city-edges* (make-city-edges))
+  (setf *congestion-city-nodes* (make-city-nodes *congestion-city-edges*))
+  (setf *player-pos* (find-empty-node))
+  (setf *visited-nodes* (list *player-pos*))
+  (draw-city)
+  (draw-known-city)
+)
+
+(defun walk (pos)
+  (handle-direction pos nil)) 
+
+(defun charge (pos)
+  (handle-direction pos t))
+
+(defun handle-direction (pos charging)				;; search the direction
+  (let ((edge (assoc pos 					;; edge -> ((2 cops)) 
+		     (cdr (assoc *player-pos* *congestion-city-edges*)))))
+    (if edge  							;; is there ?
+	(handle-new-place edge pos charging)			
+	(princ "That location does not exit"))))
+
+(defun handle-new-place (edge pos charging)			;; move selected place
+  (let* ((node (assoc pos *congestion-city-nodes*))		;; node in the state where will be
+	 (has-worn (and (member 'glow-worms node)		;; glow-worm is around there? 
+			(not (member pos *visited-nodes*)))))	;; has there been not visited?  
+    	;; => is there new worm? 
+    (pushnew pos *visited-nodes*)				;; add pos if it isn't in *visited-nodes*
+    (setf *player-pos* pos)					;; re-defun your place
+    (draw-known-city)						;; new city map
+    (cond ((member 'cops edge) 					;; cops are in edge ex. (1 (2 cops) (3) ...)
+	   (progn (princ "You ran into the cops. Game Over ")
+		  (new-game)))				       
+	  ((member 'wumpus node) 				;; you can find the target 
+	   (if charging						;; attacked?
+	       (princ "You found the Wumpus! Game Clear! ")    
+	       (progn (princ "You ran into the Wumpus. Wunpus runs away... Game Over")
+		      (new-game))))
+	  (charging (progn (princ "You wasted your last bullet. Game Over ") ;; couldn't killing 
+			   (new-game)))
+	  (has-worn (let ((new-pos (random-node)))		;; caught by gang : worm
+		      (princ "You ran into a Glow Worn Gang! You're now at ")
+		      (princ new-pos)				
+		      (princ " ")
+		      (handle-new-place nil new-pos nil))))))	;; force to move newplace (don't go through edge)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; review ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; entrance in loop function
+;; set-difference can search starange element in another list
+;; intersection can search same element between some lists
+;; remove-duplicate can remove same element in a list
