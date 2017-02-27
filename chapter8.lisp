@@ -307,3 +307,4 @@
 ;; set-difference can search starange element in another list
 ;; intersection can search same element between some lists
 ;; remove-duplicate can remove same element in a list
+;; #'truncate is return multiple values : (truncate 10 3) -> 3 1 => multiple-value bind

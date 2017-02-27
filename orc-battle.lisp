@@ -3,292 +3,6 @@
 ;; orc battle ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; how to use array ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(make-array 3)
-;; -> #(0 0 0)
-
-(make-array 3 :initial-element nil)
-;; -> #(MIL NIL NIL)
-
-(defparameter x (make-array 3))
-;; -> #(0 0 0)
-
-(setf (aref x 1) 'foo)
-;; #(0 FOO 0)
-
-(aref x 1)
-;; FOO
-
-(defparameter foo (list 'a 'b 'c))
-;; -> (A B C)
-
-(second foo)
-;; -> B
-
-(setf (second foo) 'z)
-;; -> (A Z C)
-
-(setf foo (make-array 4 :initial-element nil))
-;; -> (NIL NIL NIL NIL)
-
-(setf (aref foo 2) (list 'x 'y 'z))
-;; -> (NIL NIL (X Y Z) NIL)
-
-(setf (car (aref foo 2)) (make-hash-table))
-
-(setf (gethash 'zoink (car (aref foo 2))) 5)
-;; (NIL NIL (S#(HASH-TABLE (ZOINK . 5)) Y Z) NIL)
-
-;; how to use list ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(nth 1 '(foo bar baz))
-;; bar
-
-;; tips ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; speed of array or list                         ;;
-;; array can access too far date faster           ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;; how to use hashtable ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(make-hash-table)
-
-(defparameter x (make-hash-table))
-
-(gethash 'yup x) 
-;; -> NIL ... key number
-;;    NIL ... not exist  
-;; because there is nothing in the hash-table
-
-(defparameter x (make-hash-table))
-
-(setf (gethash 'yup x) '25) ;; set
-
-(gethash 'yup x) 
-;; -> 25 ... key number 
-;;    T  ... exist
-
-(defparameter *drink-order* (make-hash-table))
-
-(setf (gethash 'bill *drink-order*) 'double-espresso)
-
-(setf (gethash 'lisa *drink-order*) 'small-drip-coffee)
-
-(setf (gethash 'john *drink-order*) 'medium-latte)
-
-(gethash 'lisa *drink-order*)
-
-;; some functions return some value ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(round  2.4)
-;; -> 2
-;;    0.4
-
-(defun foo ()
-  (values 3 7))
-;; -> 3
-;;    7
-
-(+ (foo) 5)
-;; 8
-;; use first value
-
-(multiple-value-bind (a b) (foo)
-  (* a b))
-;; a = 3
-;; b = 7
-;; -> 21
-
-(load "chapter8")
-
-
-
-;; override
-(defun hash-edges (edge-list) ;; ex ((1 . 2) (3 . 4) ...)
-  (let ((tab (make-hash-table)))
-    (mapc (lambda (x)
-	    (let ((node (car x)))
-	      (push (cdr x) (gethash node tab))))
-	  edge-list)
-    tab))
-
-(defun get-connected-hash (node edge-tab)
-  (let ((visited (make-hash-table))) 		;; initialize
-    (labels ((traverse (node)			;; from node to anywhere
-	       (unless (gethash node visited)	;; no entry in the hash table = not visiting
-		 (setf (gethash node visited) t) ;; add entry t in the key
-		 (mapc (lambda (edge)		
-			 (traverse edge))	   
-		       (gethash node edge-tab))))) ;; search all edges from the node 
-      (traverse node))
-    visited)) ;; return 
-
-;;(time (dotimes (i 500000) (get-connected 1 (make-edge-list))))
-;; nearly 13 seconds
-
-;;(time (dotimes (i 500000) (get-connected-hash 1 (hash-edges (make-edge-list))))) 				
-;; nearly 8 seconds
-
-;; data structure ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defstruct 	person
-  		name
-		age
-		waist-size
-		favorite-color)
-
-(defparameter *bob* (make-person :name "Bob"
-				 :age 35
-				 :waist-size 32
-				 :favorite-color "blue"))
-
-;; make-,(data-structure) is defined automatically
-;; -> (PERSON :NAME "Bob" :AGE 35 ...)
-
-(person-age *bob*)
-
-;; -> 35
-;; ,(data-structure)-slot is defined automatically
-
-(setf (person-age *bob*) 36)
-
-
-;; (defparameter *THAT-GUY* #S(PERSON :NAME "Bob" :AGE 36 :WAIST-SIZE 32 :FAVORITE-COLOR "blue")) 
-;; -> it is active in repl buffer so this cannot compile
-
-;; (defun make-person (name age waist-size favorite-color)
-;;     (list name age waist-size favorite-color))
-
-;; (defun person-age (person)
-;;   (cadr person))
-
-;; (defparameter *bob* (make-person "bob" 35 32 "blue"))
-
-;; (person-age *bob*)
-;; -> 35
-
-;; genelic function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; sequence function ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; example
-(length '(a b c)) ;; -> 3 / or (list-length '(a b c))
-
-(length "blue")	  ;; -> 4
-
-(length (make-array 5)) ;; -> 5
-
-(find-if #'numberp '(a b 5 d)) ;; -> 5
-
-(count #\s "mississippi") ;; -> 4
-
-(position #\4 "2kewl4skewl") ;; -> 5
-
-(some #'numberp '(a b 5 d)) ;; -> T
-
-(every #'numberp '(a b 5 d)) ;; -> NIL
-
-;; reduce
-(reduce #'+ '(1 2 3 4)) ;; -> 10
-
-(reduce #'cons '(a b c d)) ;; -> (((A . B) . C) . D)
-
-(reduce (lambda (best item) 
-	  (if (and (evenp item) (> item best))
-	      item
-	      best))
-	'(7 4 6 5 2)
-	:initial-value 0)
-
-;; -> 6
-;; 1st argument(best) <= initial-value / 2nd argument(item) <= 7
-
-(reduce (lambda (best item) 
-	  (if (and (evenp item) (> item best))
-	      item
-	      best))
-	'(7 4 6 5 2))	
-
-;; -> 7
-;; 1st argument(best) <= 7 / 2nd argument(item) <= 4
-
-(defun sum (lst)
-  (reduce #'+ lst))
-
-(sum '(1 2 3)) ;; -> 6
-
-(sum (make-array 5 :initial-contents '(1 2 3 4 5))) ;; -> 15
-
-;; (sum "blablabla") ;; -> error
-
-(map 'list
-     (lambda (x)
-       (if (eq x #\s)
-	   #\S
-	   x))
-     "this is a string")
-
-;; -> (#\t #\h #\i #\S #\  #\i #\S #\  #\a #\  #\S #\t #\r #\i #\n #\g)
-
-(map 'string
-     (lambda (x)
-       (if (eq x #\s)
-	   #\S
-	   x))
-     "this is a string")
-
-;; -> "thiS iS a String"
-
-
-;; subseq
-
-(subseq "america" 2 6)
-
-;; sort
-
-(sort '(5 4 2 1 3) #'<)
-
-;; Type ideom
-
-(numberp 5)
-
-(characterp #\a)
-
-(stringp "Hey")
-
-(consp '(list a b))
-
-(functionp (lambda (x) (* x x)))
-
-(hash-table-p (make-hash-table))
-
-(arrayp #(1 2 3)) 
-
-(listp '(a b c))
-
-(symbolp 'bob)
-
-;; -> T
-
-(defun add (a b)
-  (cond ((and  (numberp a) (numberp b)) 
-	 (+ a b))
-	((and (listp a) (listp b))
-	 (append a b)))) ;; append -> '(a b) / list -> ((a) (b))
-
-(add 1 2) 	;; -> 3
-(add '(1) '(2)) ;; -> (1 2)
-
-(defmethod addm ((a number) (b number))
-  (+ a b))
-
-(defmethod addm ((a list) (b list))
-  (append a b))
-
-(addm 1 2) 	;; ->  3
-(addm '(1) '(2)) ;; -> (1 2)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; orc-battle ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -299,7 +13,7 @@
 
 (defparameter *monsters* nil)
 (defparameter *monster-builders* nil)
-(defparameter *monster-num* nil)
+(defparameter *monster-num* 12)
 
 (defun orc-battle ()
   (init-monsters)
@@ -398,8 +112,8 @@
 (defun init-monsters ()
   (setf *monsters*
 	(map 'vector
-	     (lambda (cc)
-	       (declare (ignore cc)) ;; avoid error
+	     (lambda (x)
+	       (declare (ignore x)) ;; avoid error
 	       (funcall (nth (random (length *monster-builders*))
 			     *monster-builders*))) 
 	     (make-array *monster-num*))))
@@ -477,7 +191,8 @@
     (princ "An orc swings hsi club at you and knocks off ")
     (princ x)
     (princ " of your health points. ")
-    (decf *player-health* x)))
+    (decf *player-health* x))
+  (fresh-line))
 
 ;; defun about hydra ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -502,6 +217,7 @@
     (princ "A hydra attacks you with ")
     (princ x)
     (princ " of its heads! It also grows back one more head! ")
+    (fresh-line)
     (incf (monster-health m))
     (decf *player-health* x)))
 
@@ -522,7 +238,8 @@
     (decf *player-agility* x)
     (when (zerop (random 2))
       (princ "It also squirts in your face, taking away a health point! ")
-      (decf *player-health*)))) ;; decf reduce 1 from the element automatically
+      (decf *player-health*))
+    (fresh-line))) ;; decf reduce 1 from the element automatically
 
 ;; defun about brigand
 
@@ -539,16 +256,5 @@
 	   (decf *player-agility* 2))
 	  ((= x *player-strength*)
 	   (princ "A brigand cuts your arm with his whip, taking off 2 strength points! ")
-	   (decf *player-strength* 2)))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; review ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; array & list
-;; hashtable & alist (associate list)
-;; if we use array and hashtable in correct points, the program will be faster
-;; if we check the program's ability -> use time commands
-;;    --- (time #'func)
-;; how to use generic  ex. length add etc ,,,(sequence func) 
-;; defstruct & defmethod
+	   (decf *player-strength* 2))))
+  (fresh-line))
