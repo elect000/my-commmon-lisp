@@ -1,0 +1,57 @@
+CL-USER> (game-repl)
+look
+You are in the living-room. A wizard is snoring loudly on the couch. There is
+ a door going west from here. There is a ladder going upstairs from here. You
+ see a whiskey on the floor. You see a bucket on the floor.
+pickup bucket
+You are now carrying the bucket
+inventory
+Items- bucket
+walk ladder
+You cannot go that way.
+walk upstairs
+You are in the attic. There is a giant welding torch in the corner. There is a
+ ladder going downstairs from here.
+walk upstairs
+You cannot go that way.
+walk downstairs
+You are in the living-room. A wizard is snoring loudly on the couch. There is
+ a door going west from here. There is a ladder going upstairs from here. You
+ see a whiskey on the floor.
+walk west
+You are in a beautiful garden. There is a well in front of you. There is a
+ door going east from here. You see a frog on the floor. You see a chain on the
+ floor.
+pickup chain
+You are now carrying the chain
+inventory
+Items- bucket chain
+walk east
+You are in the living-room. A wizard is snoring loudly on the couch. There is
+ a door going west from here. There is a ladder going upstairs from here. You
+ see a whiskey on the floor.
+walk upstairs
+You are in the attic. There is a giant welding torch in the corner. There is a
+ ladder going downstairs from here.
+weld chain bucket
+The chain is now securely welded to the bucket
+inventory
+Items- bucket chain
+walk downstairs
+You are in the living-room. A wizard is snoring loudly on the couch. There is
+ a door going west from here. There is a ladder going upstairs from here. You
+ see a whiskey on the floor.
+splash bucket wizard
+The bucket has nothing in it.
+walk west
+You are in a beautiful garden. There is a well in front of you. There is a
+ door going east from here. You see a frog on the floor.
+dunk bucket well
+The bucket us biw full of water.
+walk east
+You are in the living-room. A wizard is snoring loudly on the couch. There is
+ a door going west from here. There is a ladder going upstairs from here. You
+ see a whiskey on the floor.
+splash bucket wizard
+The wizard awakensfrom his slumber and greets you warmly. He hands you the
+ magic lo-carb dounut - you win! The end.

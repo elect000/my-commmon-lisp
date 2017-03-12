@@ -213,3 +213,7 @@
 ;;    - when you prevent it, you use "gensym"
 ;; - macro's variable which we can use from outer layer, its macro is anaphoric macro
 ;; - functional-programing is more useful than macro, so you use functional-programing at first
+
+
+;; ! check ! 
+;; list argument in macro
