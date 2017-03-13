@@ -191,7 +191,7 @@
   (defun game-tree (&rest rest)
     (or (gethash rest previous)
       (setf (gethash rest previous) (apply old-game-tree rest)))))
-c
+
 (let ((old-rate-position (symbol-function 'rate-position))
       (previous (make-hash-table)))
   (defun rate-position (tree player)
